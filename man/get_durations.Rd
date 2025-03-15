@@ -4,7 +4,7 @@
 \alias{get_durations}
 \title{Calculate Trip Durations in GTFS Data}
 \usage{
-get_durations(gtfs, method = "by.route")
+get_durations(gtfs, method = "by.route", trips = "all")
 }
 \arguments{
 \item{gtfs}{A GTFS object, ideally of class `wizardgtfs`. If not, it will be converted.}
@@ -15,13 +15,15 @@ get_durations(gtfs, method = "by.route")
   \item{"by.trip"}{Calculates the total duration for each trip.}
   \item{"detailed"`}{Calculates detailed durations for each stop-to-stop segment within a trip.}
 }}
+
+\item{trips}{A character vector of trip IDs to consider. When set to `all`, includes all trips.}
 }
 \value{
 A data frame containing trip durations based on the specified method:
   \describe{
-    \item{If `method = "by.route"`}{Returns a summary data frame with columns: `route_id`, `trips`, `average.duration`, `service_pattern`, and `pattern_frequency`.}
-    \item{If `method = "by.trip"`}{Returns a data frame with columns: `route_id`, `trip_id`, `duration`, `service_pattern`, and `pattern_frequency`.}
-    \item{If `method = "detailed"`}{Returns a data frame with columns: `route_id`, `trip_id`, `hour`, `from_stop_id`, `to_stop_id`, `duration`, `service_pattern`, and `pattern_frequency`.}
+    \item{If `method = "by.route"`}{It includes dwell times. Returns a summary data frame with columns: `route_id`, `trips`, `average.duration`, `service_pattern`, and `pattern_frequency`.}
+    \item{If `method = "by.trip"`}{It includes dwell times. Returns a data frame with columns: `route_id`, `trip_id`, `duration`, `service_pattern`, and `pattern_frequency`.}
+    \item{If `method = "detailed"`}{It does not include dwell times. Returns a data frame with columns: `route_id`, `trip_id`, `hour`, `from_stop_id`, `to_stop_id`, `duration`, `service_pattern`, and `pattern_frequency`.}
   }
 }
 \description{
@@ -34,19 +36,19 @@ This function calls specific sub-functions based on the selected method:
 
 - "by.trip": Calculates the total duration of each trip.
 
-- "detailed": Calculates detailed durations between consecutive stops within each trip.
+- "detailed": Calculates detailed durations between consecutive stops within each trip, excluding dwell times.
 
 If an invalid `method` is specified, the function defaults to `"by.route"` and provides a warning.
 }
 \examples{
 # Calculate average route durations
-durations_by_route <- get_durations(gtfs = for_rail_gtfs, method = "by.route")
+durations_by_route <- get_durations(gtfs = for_rail_gtfs, method = "by.route", trips = 'all')
 
 # Calculate trip durations
-durations_by_trip <- get_durations(gtfs = for_rail_gtfs, method = "by.trip")
+durations_by_trip <- get_durations(gtfs = for_rail_gtfs, method = "by.trip", trips = 'all')
 
 # Calculate detailed durations between stops
-detailed_durations <- get_durations(gtfs = for_rail_gtfs, method = "detailed")
+detailed_durations <- get_durations(gtfs = for_rail_gtfs, method = "detailed", trips = 'all')
 
 }
 \seealso{

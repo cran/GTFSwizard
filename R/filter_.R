@@ -1,10 +1,10 @@
 #' Filter GTFS Data by Service, Route, Date, Stop, Trip, and Time
 #'
-#' The `filter_` functions allow you to selectively filter data within a `wizardgtfs` object based on criteria such as service patterns, specific dates, service IDs, route IDs, trip IDs, stop IDs, or time ranges.
+#' The `filter_` functions selectively filter data within a `wizardgtfs` object based on criteria such as service patterns, specific dates, service IDs, route IDs, trip IDs, stop IDs, or time ranges.
 #'
 #' @param gtfs A GTFS object, preferably of class `wizardgtfs`. If not, the function will attempt to convert it using `GTFSwizard::as_wizardgtfs()`.
 #' @param servicepattern (Optional) A character vector of service patterns to retain. Defaults to the most frequent pattern (typical day) if `NULL`.
-#' @param dates (Optional) A date or vector of dates (as "YYYY-MM-DD" character or POSIXct) to filter services active on those dates. Defaults to the last available date if `NULL`.
+#' @param dates (Optional) A date or vector of dates (as "YYYY-MM-DD" character or POSIXct) to filter services active on those dates. Return the furtherst available date if `NULL`.
 #' @param service (Optional) A character vector of service IDs to retain in the `wizardgtfs` object.
 #' @param route (Optional) A character vector of route IDs to retain in the `wizardgtfs` object. When `keep = FALSE`, excludes the specified routes.
 #' @param trip (Optional) A character vector of trip IDs to retain in the `wizardgtfs` object. When `keep = FALSE`, excludes the specified trips.
@@ -45,7 +45,9 @@
 #' filtered_gtfs <- filter_route(gtfs = for_rail_gtfs, route = for_rail_gtfs$routes$route_id[1:2])
 #'
 #' # Filter by trip ID, excluding specified trips
-#' filtered_gtfs <- filter_trip(gtfs = for_rail_gtfs, trip = for_rail_gtfs$trips$trip_id[1:2], keep = FALSE)
+#' filtered_gtfs <- filter_trip(gtfs = for_rail_gtfs,
+#'                               trip = for_rail_gtfs$trips$trip_id[1:2],
+#'                               keep = FALSE)
 #'
 #' # Filter by a time range
 #' filtered_gtfs <- filter_time(gtfs = for_rail_gtfs, from = "06:30:00", to = "10:00:00")
@@ -69,7 +71,7 @@ filter_servicepattern <- function(gtfs, servicepattern = NULL){
   }
 
   if(is.null(servicepattern)){
-    warning('\nNo service pattern(s) provided.\nReturning most frequent pattern.')
+    warning(crayon::red('No '), 'service pattern(s) provided. Returning most frequent pattern.')
     servicepattern <- 'servicepattern-1'
   }
 
@@ -78,10 +80,9 @@ filter_servicepattern <- function(gtfs, servicepattern = NULL){
 
   if(any(!servicepattern %in% unique(service_pattern$service_pattern))){
 
-    stop(paste0('\nService pattern should be one of ',
+    stop(paste0('Service pattern should be one of ',
                 paste(unique(service_pattern$service_pattern), collapse = ', '),
-                '.',
-                '\nUse get_paservicepattern() function to check service patterns.'))
+                '. Use ', crayon::cyan('get_servicepattern()'), ' function to check service patterns.'))
 
   }
 
@@ -191,8 +192,8 @@ filter_date <- function(gtfs, dates = NULL){
     message('The gtfs object is not of the wizardgtfs class.\nComputation may take longer. Using ', crayon::cyan('as_gtfswizard()'), ' is advised.')
   }
 
-  if(is.null('dates')) {
-    message(crayon::red('No date(s) provided.'), '\nReturning furtherst date.')
+  if(is.null(dates)) {
+    warning(crayon::red('No date(s) provided.'), ' Returning furtherst date.')
     date <- gtfs$dates_services$date[length(gtfs$dates_services$date)] %>% as.Date()
   } else {
     date <- as.Date(dates)
@@ -312,7 +313,7 @@ filter_service <- function(gtfs, service){
   }
 
   if(is.null(service)){
-    stop('\nNo service(s) provided.\nUse get_servicepattern() to check available services.')
+    stop(crayon::red('No '), 'service(s) provided. Use ', crayon::cyan('get_servicepattern() '), 'to check available services.')
   }
 
   if(any(!service %in% gtfs$trips$service_id)){
@@ -422,13 +423,12 @@ filter_route <- function(gtfs, route, keep = TRUE){
   }
 
   if(purrr::is_null(route)){
-    stop('\nNo route(s) provided.\nRun gtfs$routes to check available routes.')
+    stop(crayon::red('No '), 'route(s) provided. Run ', crayon::cyan('gtfs$routes '), 'to check available routes.')
   }
 
   if(any(!route %in% gtfs$routes$route_id)){
-    stop('\nThere is no such route(s).\nRun gtfs$routes to check available routes.')
-
-  }
+    stop('There is ', crayon::red('no '), 'such route(s). Run ', crayon::cyan('gtfs$routes '), 'to check available routes.')
+    }
 
   checkmate::assert_logical(keep)
 
@@ -534,17 +534,16 @@ filter_trip <- function(gtfs, trip, keep = TRUE){
 
   if(!"wizardgtfs" %in% class(gtfs)){
     gtfs <- GTFSwizard::as_wizardgtfs(gtfs)
-    message('The gtfs object is not of the wizardgtfs class.\nComputation may take longer. Using ', crayon::cyan('as_gtfswizard()'), ' is advised.')
+    message('The gtfs object is not of the ', crayon::cyan('gtfswizard'), ' class. Computation may take longer. Using ', crayon::cyan('as_gtfswizard()'), ' is advised.')
   }
 
 
   if(is.null(trip)){
-    stop('\nNo trip(s) provided.\nRun gtfs$trips to check available trips.')
+    stop(crayon::red('No '), 'trip(s) provided. Run ', crayon::cyan('gtfs$trips '), 'to check available trips.')
   }
 
   if(any(!trip %in% gtfs$trips$trip_id)){
-    stop('\nThere is no such trip(s).\nRun gtfs$trips to check available trips.')
-
+    stop('\nThere is ', crayon::red('no '), 'such trip(s). Run ', crayon::cyan('gtfs$trips'), ' to check available trips.')
   }
 
   checkmate::assert_logical(keep)
@@ -655,12 +654,11 @@ filter_stop <- function(gtfs, stop){
   }
 
   if(is.null(stop)){
-    stop('\nNo stop(s) provided.\nRun gtfs$stops to check available stops.')
+    stop(crayon::red('No '), 'stop(s) provided. Run ', crayon::cyan('gtfs$stops '), 'to check available stops.')
   }
 
   if(any(!stop %in% gtfs$stops$stop_id)){
-    stop('\nThere is no such stop(s).\nRun gtfs$stops to check available stops.')
-
+    stop('There is ', crayon::red('no '), 'such stop(s). Run ', crayon::cyan('gtfs$stops '), 'to check available stops.')
   }
 
   stops <- stop
@@ -767,12 +765,12 @@ filter_time <- function(gtfs, from = '0:0:0', to = "48:00:00"){
 
   if(suppressWarnings(is.na(stringr::str_split(from, ":") %>%
                             lapply(FUN = as.numeric)))){
-    stop('Wrong ', crayon::cyan('from'), ' time format. Please use ', crayon::cyan('HH:MM:SS'), '.')
+    stop(crayon::red('Wrong '), crayon::cyan('from'), ' time format. Please use ', crayon::cyan('HH:MM:SS'), '.')
   }
 
   if(suppressWarnings(is.na(stringr::str_split(to, ":") %>%
                             lapply(FUN = as.numeric)))){
-    stop('Wrong ', crayon::cyan('to'), ' time format. Please use ', crayon::cyan('HH:MM:SS'), '.')
+    stop(crayon::red('Wrong '), crayon::cyan('to'), ' time format. Please use ', crayon::cyan('HH:MM:SS'), '.')
   }
 
   from <-
