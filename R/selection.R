@@ -65,11 +65,12 @@
 #' A bare expression such as `route_id` creates one group per route. Multiple
 #' grouping expressions create combinations, for example
 #' `selection(gtfs, route_id, direction_id)`. Logical expressions such as
-#' `route_id %in% c("1", "2")` restrict the records represented in the
+#' `route_id \%in\% c("1", "2")` restrict the records represented in the
 #' selection but do not remove rows from the GTFS feed.
 #'
-#' Spatial expressions may use `geometry` with `%intersects%`, `%touches%`,
-#' `%crosses%`, `%within%`, `%contains%`, `%overlaps%`, or `%equals%`.
+#' Spatial expressions may use `geometry` with `\%intersects\%`, `\%touches\%`,
+#' `\%crosses\%`, `\%within\%`, `\%contains\%`, `\%overlaps\%`, or
+#' `\%equals\%`.
 #'
 #' @examples
 #' grouped <- selection(for_rail_gtfs, route_id, direction_id)
@@ -107,7 +108,7 @@ selection.list <- function(gtfs, ..., add = FALSE){
 
 #' @exportS3Method GTFSwizard::selection wizardgtfs
 selection.wizardgtfs <- function(gtfs, ..., add = FALSE){
-  checkmate::assert_flag(add)
+  gw_assert_flag(add, "add")
   quosures <- rlang::enquos(..., .ignore_empty = "all")
   if(!length(quosures)){
     gw_stop("supply at least one grouping or logical selection expression.")
@@ -117,7 +118,7 @@ selection.wizardgtfs <- function(gtfs, ..., add = FALSE){
 
 #' @exportS3Method GTFSwizard::selection wizardgtfs_selected
 selection.wizardgtfs_selected <- function(gtfs, ..., add = FALSE){
-  checkmate::assert_flag(add)
+  gw_assert_flag(add, "add")
   new_quosures <- rlang::enquos(..., .ignore_empty = "all")
   if(!length(new_quosures)){
     gw_stop("supply at least one grouping or logical selection expression.")

@@ -4,17 +4,23 @@
 \alias{get_frequency}
 \title{Calculate Scheduled Service Frequency}
 \usage{
-get_frequency(gtfs, method = "by.route")
+get_frequency(gtfs, method = "by_trip")
 }
 \arguments{
 \item{gtfs}{A GTFS object.}
 
-\item{method}{One of `"by.route"`, `"by.shape"`, `"by.stop"`, or
-`"detailed"`.}
+\item{method}{One of `"by_trip"`, `"by_route"`, `"by_shape"`, `"by_stop"`,
+or `"detailed"`. Legacy dotted values remain accepted.}
 }
 \value{
-A tibble containing the selected identifiers, frequency, service
-  pattern, and number of dates represented by the pattern.
+A tibble whose observational unit depends on `method`:
+  \describe{
+    \item{`"by_trip"`}{`route_id`, `trip_id`, optional `direction_id`, `service_pattern`, `pattern_frequency`, and `daily.frequency`.}
+    \item{`"by_route"`}{`route_id`, optional `direction_id`, `service_pattern`, `pattern_frequency`, and `daily.frequency`.}
+    \item{`"by_shape"`}{`shape_id`, optional `direction_id`, `service_pattern`, `pattern_frequency`, and `daily.frequency`.}
+    \item{`"by_stop"`}{`stop_id`, optional `direction_id`, `service_pattern`, `pattern_frequency`, and `daily.frequency`.}
+    \item{`"detailed"`}{`route_id`, optional `direction_id`, departure `hour`, `service_pattern`, `pattern_frequency`, and `frequency`.}
+  }
 }
 \description{
 Counts trip departures by route, shape, stop, or hour. Trips referenced by
@@ -22,7 +28,7 @@ Counts trip departures by route, shape, stop, or hour. Trips referenced by
 exclusive `end_time`, and `headway_secs`, as required by GTFS.
 }
 \examples{
-get_frequency(for_rail_gtfs, "by.route")
+get_frequency(for_rail_gtfs, "by_route")
 get_frequency(for_rail_gtfs, "detailed")
 
 }

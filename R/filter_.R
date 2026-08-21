@@ -5,7 +5,9 @@
 #'
 #' @param gtfs A GTFS object.
 #' @param servicepattern Character vector of service-pattern IDs returned by
-#'   [get_servicepattern()]. When `NULL`, the most frequent pattern is used.
+#'   [get_servicepattern()]. A pattern represents a distinct set of services
+#'   active on a date. When `NULL`, the most frequent active pattern is used.
+#'   The synthetic `"No service"` pattern cannot be used to filter trips.
 #' @param dates Dates to retain. Values accepted by [as.Date()] are supported.
 #'   When `NULL`, the latest available service date is used.
 #' @param service,route,trip,stop Character vectors of IDs to retain.
@@ -42,13 +44,16 @@
 #' @export
 filter_servicepattern <- function(gtfs, servicepattern = NULL){
   gtfs <- ensure_wizardgtfs(gtfs)
-  patterns <- GTFSwizard::get_servicepattern(gtfs)
-  if(!nrow(patterns)){
+  date_patterns <- service_pattern_date_table(gtfs)
+  active_patterns <- date_patterns[
+    date_patterns$service_pattern != "No service", , drop = FALSE
+  ]
+  if(!nrow(active_patterns)){
     gw_stop("no service patterns are available.")
   }
   if(is.null(servicepattern)){
-    servicepattern <- patterns$service_pattern[
-      which.max(patterns$pattern_frequency)
+    servicepattern <- active_patterns$service_pattern[
+      which.max(active_patterns$pattern_frequency)
     ]
     gw_warn(
       "no `servicepattern` supplied; using `", servicepattern,
@@ -56,13 +61,16 @@ filter_servicepattern <- function(gtfs, servicepattern = NULL){
     )
   }
   assert_known_ids(
-    servicepattern, patterns$service_pattern, "service pattern",
+    servicepattern, date_patterns$service_pattern, "service pattern",
     "`get_servicepattern()`"
   )
-  services <- unique(patterns$service_id[
-    patterns$service_pattern %in% servicepattern
-  ])
-  prune_gtfs(gtfs, gtfs$trips$trip_id[gtfs$trips$service_id %in% services])
+  selected_dates <- active_patterns$date[
+    active_patterns$service_pattern %in% servicepattern
+  ]
+  if(!length(selected_dates)){
+    gw_stop("`No service` is a calendar pattern and does not identify trips.")
+  }
+  filter_date(gtfs, selected_dates)
 }
 
 #' @rdname filter_functions
@@ -120,7 +128,7 @@ filter_service <- function(gtfs, service){
 #' @export
 filter_route <- function(gtfs, route, keep = TRUE){
   gtfs <- ensure_wizardgtfs(gtfs)
-  checkmate::assert_flag(keep)
+  gw_assert_flag(keep, "keep")
   assert_known_ids(route, gtfs$routes$route_id, "route", "`gtfs$routes`")
   selected <- if(keep){
     gtfs$trips$route_id %in% route
@@ -134,7 +142,7 @@ filter_route <- function(gtfs, route, keep = TRUE){
 #' @export
 filter_trip <- function(gtfs, trip, keep = TRUE){
   gtfs <- ensure_wizardgtfs(gtfs)
-  checkmate::assert_flag(keep)
+  gw_assert_flag(keep, "keep")
   assert_known_ids(trip, gtfs$trips$trip_id, "trip", "`gtfs$trips`")
   selected <- if(keep){
     gtfs$trips$trip_id %in% trip

@@ -1,3 +1,33 @@
+# GTFSwizard 1.2.1
+
+* Refreshed the README figures and package website from the current plotting
+  code, and added a reproducible figure-generation script for maintainers.
+
+* Improved the year-faceted service calendar for dense feeds and retained the
+  supplied object name in the `explore_gtfs()` dashboard.
+
+* Organized the package website by workflow, added task-based function
+  reference sections, and added vignettes for getting started, service
+  analysis, filtering and editing, and the interactive dashboard.
+
+* Standardized public method values with underscores: `by_trip`, `by_route`,
+  `by_hour`, `by_stop`, and `by_shape`. Legacy dotted values remain accepted.
+
+* Standardized public argument names including `file_path`, `gtfs_x`,
+  `gtfs_y`, `max_dwelltime`, and `min_length`, with compatibility aliases for
+  previous names.
+
+* Improved `tidy_raptor()` validation, transfer handling, date selection, and
+  output column names.
+
+* Added planning indicators to `explore_gtfs()`, including scheduled headway,
+  commercial speed, service span, vehicle-hours, peak fleet, stop spacing, and
+  route connectivity.
+
+* Calendar and service-pattern summaries now represent dates with no active
+  service explicitly: trip counts are `0`, and the service pattern is labeled
+  `"No service"`.
+
 # GTFSwizard 1.2.0
 
 * `plot_routefrequency()` now uses a route-hour-service pattern tile plot and
@@ -38,11 +68,11 @@
 
 # GTFSwizard 1.1.0
 
-* Now featuring travel time matrices, trip speed and dweel time edition, corridors, hubs, and more!
+* Now featuring travel time matrices, trip speed and dwell-time editing, corridors, hubs, and more!
 
 * New functions
   - tidy_raptor() estimates travel time matrices from gtfs feeds;
-  - edit_speeds() Adjust Travel Speed in a GTFS Dataset
+  - edit_speed() adjusts travel speed in a GTFS dataset;
   - edit_dwelltime() modifies the dwell time of trips;
   - set_dwelltime() overwrites the dwell time of trips;
   - get_hubs() estimates high integration potential stops;
@@ -52,15 +82,15 @@
   - latlon2epsg() determines the appropriate EPSG code for a given sf object.
  
 * New methods
-  - get_headways() now accepts 'method = "by.stop"' and 'method = "by.shape"'.
-  - get_frequency() now accepts 'method = "by.shape"' and 'method = "by.stop"'.
+  - get_headways() now accepts 'method = "by_stop"' and 'method = "by_shape"'.
+  - get_frequency() now accepts 'method = "by_shape"' and 'method = "by_stop"'.
   
 * Bug fix & improvements
   - Better column naming;
   - Minor bug fixed on filter_date() and get_shapes_sf();
   - get_headways() output fixed;
   - split_trip() can now be used after filter_time();
-  - get_speed(), get_durations() and get_distances() now accepts 'trips = ' argument.
+  - get_speeds(), get_durations() and get_distances() now accept the `trips` argument.
 
 # GTFSwizard 1.0.0
 

@@ -17,7 +17,7 @@
 #' [GTFS Routes, Stops, and Trips](https://gtfs.org/documentation/schedule/examples/routes-stops-trips/)
 #' @export
 plot_servicespan <- function(gtfs, top_n = 30L){
-  checkmate::assert_int(top_n, lower = 1L)
+  gw_assert_int(top_n, "top_n", lower = 1L)
   gtfs <- ensure_wizardgtfs(gtfs)
   durations <- trip_duration_table(gtfs)
   starts <- get_1stdeparture(gtfs) |>
@@ -26,7 +26,10 @@ plot_servicespan <- function(gtfs, top_n = 30L){
     dplyr::select(route_id, trip_id, service_id) |>
     dplyr::left_join(starts[, c("trip_id", "start_hour")], by = "trip_id") |>
     dplyr::left_join(durations, by = "trip_id") |>
-    dplyr::left_join(get_servicepattern(gtfs), by = "service_id") |>
+    dplyr::left_join(
+      get_servicepattern(gtfs), by = "service_id",
+      relationship = "many-to-many"
+    ) |>
     dplyr::mutate(end_hour = .data$start_hour + .data$duration / 3600) |>
     dplyr::filter(is.finite(.data$start_hour), is.finite(.data$end_hour)) |>
     dplyr::group_by(.data$route_id, .data$service_pattern) |>
@@ -100,8 +103,7 @@ plot_serviceheatmap <- function(gtfs){
   frequency <- get_frequency(gtfs, "detailed") |>
     dplyr::group_by(.data$service_pattern, .data$hour) |>
     dplyr::summarise(departures = sum(.data$frequency), .groups = "drop")
-  pattern_dates <- tidyr::unnest(gtfs$dates_services, cols = "service_id") |>
-    dplyr::left_join(get_servicepattern(gtfs), by = "service_id") |>
+  pattern_dates <- service_pattern_date_table(gtfs) |>
     dplyr::distinct(.data$date, .data$service_pattern) |>
     dplyr::mutate(
       weekday = factor(
@@ -173,14 +175,17 @@ plot_serviceheatmap <- function(gtfs){
 #' [FTA Evaluation Introduction](https://www.transit.dot.gov/research-innovation/evaluation-introduction)
 #' @export
 plot_routeduration <- function(gtfs, top_n = 20L){
-  checkmate::assert_int(top_n, lower = 1L)
+  gw_assert_int(top_n, "top_n", lower = 1L)
   gtfs <- ensure_wizardgtfs(gtfs)
   data <- trip_duration_table(gtfs) |>
     dplyr::left_join(
       gtfs$trips[, c("trip_id", "route_id", "service_id")],
       by = "trip_id"
     ) |>
-    dplyr::left_join(get_servicepattern(gtfs), by = "service_id") |>
+    dplyr::left_join(
+      get_servicepattern(gtfs), by = "service_id",
+      relationship = "many-to-many"
+    ) |>
     dplyr::mutate(duration_minutes = .data$duration / 60) |>
     dplyr::filter(
       is.finite(.data$duration_minutes), .data$duration_minutes >= 0
@@ -233,14 +238,17 @@ plot_routeduration <- function(gtfs, top_n = 20L){
 #' [FTA National Transit Database](https://www.transit.dot.gov/ntd)
 #' @export
 plot_servicesupply <- function(gtfs, top_n = 20L){
-  checkmate::assert_int(top_n, lower = 1L)
+  gw_assert_int(top_n, "top_n", lower = 1L)
   gtfs <- ensure_wizardgtfs(gtfs)
   data <- trip_duration_table(gtfs) |>
     dplyr::left_join(
       gtfs$trips[, c("trip_id", "route_id", "service_id")],
       by = "trip_id"
     ) |>
-    dplyr::left_join(get_servicepattern(gtfs), by = "service_id") |>
+    dplyr::left_join(
+      get_servicepattern(gtfs), by = "service_id",
+      relationship = "many-to-many"
+    ) |>
     dplyr::filter(is.finite(.data$duration), .data$duration >= 0) |>
     dplyr::group_by(.data$route_id, .data$service_pattern) |>
     dplyr::summarise(
