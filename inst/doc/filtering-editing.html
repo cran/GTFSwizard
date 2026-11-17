@@ -367,6 +367,11 @@ deliberately retain partial trips. This is useful for corridor,
 express-service, and time-window experiments. The retained trip can
 therefore begin or end at a different stop than it did in the source
 feed.</p>
+<p>Referenced parent stations are retained. Time filtering expands
+frequency-based trips into departures at their headway intervals, with
+generated trip IDs, before retaining the stop calls in the chosen
+window. Each departure can therefore retain a different portion of the
+original stop sequence.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>stop_ids <span class="ot">&lt;-</span> gtfs<span class="sc">$</span>stops<span class="sc">$</span>stop_id[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>]</span>
 <span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>partial_feed <span class="ot">&lt;-</span> <span class="fu">filter_stop</span>(gtfs, stop_ids)</span></code></pre></div>
 <p>Service patterns describe exact sets of services active on calendar
@@ -384,50 +389,68 @@ retained dates.</p>
 <span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>][<span class="dv">1</span>]</span>
 <span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>date_feed <span class="ot">&lt;-</span> <span class="fu">filter_date</span>(gtfs, active_date)</span></code></pre></div>
 </div>
+<div id="select-service-within-an-area" class="section level2">
+<h2>Select service within an area</h2>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>area <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">39</span>, <span class="sc">-</span><span class="dv">4</span>, <span class="sc">-</span><span class="dv">38</span>, <span class="sc">-</span><span class="dv">3</span>) <span class="co"># xmin, ymin, xmax, ymax in WGS84</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>area_feed <span class="ot">&lt;-</span> <span class="fu">filter_area</span>(gtfs, area)</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="fu">nrow</span>(area_feed<span class="sc">$</span>trips)</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; [1] 215</span></span></code></pre></div>
+<p>The default keeps complete trips with a stop inside the area. With
+<code>full_trips = FALSE</code>, a trip needs two retained calls and
+known arrival and departure times at its new endpoints. Frequency
+windows shift with the first retained stop. An area with separated
+sections can retain nonconsecutive calls.</p>
+</div>
 <div id="select-or-group-without-filtering" class="section level2">
 <h2>Select or group without filtering</h2>
 <p><code>selection()</code> resembles <code>dplyr::group_by()</code> but
 stores GTFS-specific selection metadata while leaving all feed tables
 unchanged. Bare names create groups; logical expressions restrict the
 records represented by those groups.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>grouped <span class="ot">&lt;-</span> <span class="fu">selection</span>(gtfs, route_id, direction_id)</span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">attr</span>(grouped, <span class="st">&quot;selection&quot;</span>)<span class="sc">$</span>groups</span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt; # A tibble: 6 × 6</span></span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt;   route_id direction_id n_stop_calls routes    trips      stops     </span></span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;           &lt;int&gt;        &lt;int&gt; &lt;list&gt;    &lt;list&gt;     &lt;list&gt;    </span></span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt; 1 6                   0         1260 &lt;chr [1]&gt; &lt;chr [63]&gt; &lt;chr [20]&gt;</span></span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt; 2 6                   1         1280 &lt;chr [1]&gt; &lt;chr [64]&gt; &lt;chr [20]&gt;</span></span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt; 3 7                   0          150 &lt;chr [1]&gt; &lt;chr [15]&gt; &lt;chr [10]&gt;</span></span>
-<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt; 4 7                   1          150 &lt;chr [1]&gt; &lt;chr [15]&gt; &lt;chr [10]&gt;</span></span>
-<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt; 5 8                   0          290 &lt;chr [1]&gt; &lt;chr [29]&gt; &lt;chr [10]&gt;</span></span>
-<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt; 6 8                   1          290 &lt;chr [1]&gt; &lt;chr [29]&gt; &lt;chr [10]&gt;</span></span>
-<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a></span>
-<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>selected <span class="ot">&lt;-</span> <span class="fu">selection</span>(</span>
-<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>  gtfs,</span>
-<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>  route_id,</span>
-<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a>  route_id <span class="sc">%in%</span> route_ids</span>
-<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a>)</span>
-<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a></span>
-<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a>selected <span class="ot">&lt;-</span> <span class="fu">unselection</span>(selected)</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>grouped <span class="ot">&lt;-</span> <span class="fu">selection</span>(gtfs, route_id, direction_id)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="fu">attr</span>(grouped, <span class="st">&quot;selection&quot;</span>)<span class="sc">$</span>groups</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co">#&gt; # A tibble: 6 × 6</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co">#&gt;   route_id direction_id n_stop_calls routes    trips      stops     </span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;           &lt;int&gt;        &lt;int&gt; &lt;list&gt;    &lt;list&gt;     &lt;list&gt;    </span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt; 1 6                   0         1260 &lt;chr [1]&gt; &lt;chr [63]&gt; &lt;chr [20]&gt;</span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt; 2 6                   1         1280 &lt;chr [1]&gt; &lt;chr [64]&gt; &lt;chr [20]&gt;</span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt; 3 7                   0          150 &lt;chr [1]&gt; &lt;chr [15]&gt; &lt;chr [10]&gt;</span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt; 4 7                   1          150 &lt;chr [1]&gt; &lt;chr [15]&gt; &lt;chr [10]&gt;</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt; 5 8                   0          290 &lt;chr [1]&gt; &lt;chr [29]&gt; &lt;chr [10]&gt;</span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt; 6 8                   1          290 &lt;chr [1]&gt; &lt;chr [29]&gt; &lt;chr [10]&gt;</span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a>selected <span class="ot">&lt;-</span> <span class="fu">selection</span>(</span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a>  gtfs,</span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a>  route_id,</span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a>  route_id <span class="sc">%in%</span> route_ids</span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a>)</span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a>selected <span class="ot">&lt;-</span> <span class="fu">unselection</span>(selected)</span></code></pre></div>
 </div>
 <div id="edit-scheduled-times" class="section level2">
 <h2>Edit scheduled times</h2>
 <p>The editing functions return modified copies. They do not write back
 to the zip archive or object from which the feed was loaded.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>trip_ids <span class="ot">&lt;-</span> gtfs<span class="sc">$</span>trips<span class="sc">$</span>trip_id[<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]</span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>stop_ids <span class="ot">&lt;-</span> gtfs<span class="sc">$</span>stops<span class="sc">$</span>stop_id[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>]</span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>delayed <span class="ot">&lt;-</span> <span class="fu">delay_trip</span>(gtfs, <span class="at">trip =</span> trip_ids, <span class="at">duration =</span> <span class="dv">300</span>)</span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>faster <span class="ot">&lt;-</span> <span class="fu">edit_speed</span>(gtfs, <span class="at">trips =</span> trip_ids, <span class="at">stops =</span> stop_ids, <span class="at">factor =</span> <span class="fl">1.2</span>)</span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>fixed_dwell <span class="ot">&lt;-</span> <span class="fu">set_dwelltime</span>(</span>
-<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>  gtfs, <span class="at">duration =</span> <span class="dv">30</span>, <span class="at">trips =</span> trip_ids, <span class="at">stops =</span> stop_ids</span>
-<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>)</span>
-<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>scaled_dwell <span class="ot">&lt;-</span> <span class="fu">edit_dwelltime</span>(</span>
-<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>  gtfs, <span class="at">trips =</span> trip_ids, <span class="at">stops =</span> stop_ids, <span class="at">factor =</span> <span class="fl">1.5</span></span>
-<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>trip_ids <span class="ot">&lt;-</span> gtfs<span class="sc">$</span>trips<span class="sc">$</span>trip_id[<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>stop_ids <span class="ot">&lt;-</span> gtfs<span class="sc">$</span>stops<span class="sc">$</span>stop_id[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>]</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>delayed <span class="ot">&lt;-</span> <span class="fu">delay_trip</span>(gtfs, <span class="at">trip =</span> trip_ids, <span class="at">duration =</span> <span class="dv">300</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>faster <span class="ot">&lt;-</span> <span class="fu">edit_speed</span>(gtfs, <span class="at">trips =</span> trip_ids, <span class="at">stops =</span> stop_ids, <span class="at">factor =</span> <span class="fl">1.2</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>fixed_dwell <span class="ot">&lt;-</span> <span class="fu">set_dwelltime</span>(</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  gtfs, <span class="at">duration =</span> <span class="dv">30</span>, <span class="at">trips =</span> trip_ids, <span class="at">stops =</span> stop_ids</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>)</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>scaled_dwell <span class="ot">&lt;-</span> <span class="fu">edit_dwelltime</span>(</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>  gtfs, <span class="at">trips =</span> trip_ids, <span class="at">stops =</span> stop_ids, <span class="at">factor =</span> <span class="fl">1.5</span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>)</span></code></pre></div>
 <p><code>duration</code> is expressed in seconds. A speed or dwell-time
 <code>factor</code> is a multiplier: values above one increase the
 stated quantity and values between zero and one decrease it.</p>
+<p>Edited times at or beyond 48 hours are wrapped into the next
+service-day clock range. To preserve non-decreasing stop times, the
+package may clamp subsequent times when wrapping would otherwise reverse
+their order. Extremely large adjustments can therefore change the
+intended durations; inspect the resulting timetable before using or
+exporting the scenario.</p>
 </div>
 <div id="split-trips" class="section level2">
 <h2>Split trips</h2>
@@ -435,33 +458,36 @@ stated quantity and values between zero and one decrease it.</p>
 approximately equal consecutive parts, or split at selected internal
 stop IDs. It keeps the original stop order and updates references
 handled by the package.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>trip_id <span class="ot">&lt;-</span> gtfs<span class="sc">$</span>trips<span class="sc">$</span>trip_id[<span class="dv">1</span>]</span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>split_equal <span class="ot">&lt;-</span> <span class="fu">split_trip</span>(gtfs, <span class="at">trip =</span> trip_id, <span class="at">split =</span> <span class="dv">1</span>)</span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co">#&gt; GTFSwizard: building straight-line shapes from ordered stop coordinates.</span></span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a></span>
-<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>trip_stops <span class="ot">&lt;-</span> gtfs<span class="sc">$</span>stop_times<span class="sc">$</span>stop_id[gtfs<span class="sc">$</span>stop_times<span class="sc">$</span>trip_id <span class="sc">==</span> trip_id]</span>
-<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">length</span>(trip_stops) <span class="sc">&gt;</span> <span class="dv">2</span>) {</span>
-<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  split_at_stop <span class="ot">&lt;-</span> <span class="fu">split_trip</span>(gtfs, <span class="at">trip =</span> trip_id, <span class="at">stops =</span> trip_stops[<span class="dv">2</span>])</span>
-<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>}</span>
-<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt; GTFSwizard: building straight-line shapes from ordered stop coordinates.</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>trip_id <span class="ot">&lt;-</span> gtfs<span class="sc">$</span>trips<span class="sc">$</span>trip_id[<span class="dv">1</span>]</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>split_equal <span class="ot">&lt;-</span> <span class="fu">split_trip</span>(gtfs, <span class="at">trip =</span> trip_id, <span class="at">split =</span> <span class="dv">1</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="co">#&gt; GTFSwizard: building straight-line shapes from ordered stop coordinates.</span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>trip_stops <span class="ot">&lt;-</span> gtfs<span class="sc">$</span>stop_times<span class="sc">$</span>stop_id[gtfs<span class="sc">$</span>stop_times<span class="sc">$</span>trip_id <span class="sc">==</span> trip_id]</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">length</span>(trip_stops) <span class="sc">&gt;</span> <span class="dv">2</span>) {</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>  split_at_stop <span class="ot">&lt;-</span> <span class="fu">split_trip</span>(gtfs, <span class="at">trip =</span> trip_id, <span class="at">stops =</span> trip_stops[<span class="dv">2</span>])</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>}</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a><span class="co">#&gt; GTFSwizard: building straight-line shapes from ordered stop coordinates.</span></span></code></pre></div>
 <p>The first and final stops are not valid split boundaries. When
 several trips are edited together, stop IDs are interpreted within each
-selected trip.</p>
+selected trip. Each split boundary stop appears in both adjacent parts.
+Supply either <code>split</code> or <code>stops</code>, not both; each
+selected trip must have a matching internal stop when using
+<code>stops</code>.</p>
 </div>
 <div id="merge-and-export-scenarios" class="section level2">
 <h2>Merge and export scenarios</h2>
 <p>By default, <code>merge_gtfs()</code> suffixes identifiers and their
 foreign-key references to avoid collisions between feeds.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>merged <span class="ot">&lt;-</span> <span class="fu">merge_gtfs</span>(</span>
-<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  <span class="fu">filter_route</span>(gtfs, gtfs<span class="sc">$</span>routes<span class="sc">$</span>route_id[<span class="dv">1</span>]),</span>
-<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  <span class="fu">filter_route</span>(gtfs, gtfs<span class="sc">$</span>routes<span class="sc">$</span>route_id[<span class="dv">2</span>])</span>
-<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>merged <span class="ot">&lt;-</span> <span class="fu">merge_gtfs</span>(</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>  <span class="fu">filter_route</span>(gtfs, gtfs<span class="sc">$</span>routes<span class="sc">$</span>route_id[<span class="dv">1</span>]),</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>  <span class="fu">filter_route</span>(gtfs, gtfs<span class="sc">$</span>routes<span class="sc">$</span>route_id[<span class="dv">2</span>])</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>)</span></code></pre></div>
 <p>Export only when the scenario is ready. <code>write_gtfs()</code>
 writes a new archive at the requested path and does not overwrite the
 original unless the same path is explicitly supplied.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>output <span class="ot">&lt;-</span> <span class="fu">tempfile</span>(<span class="at">fileext =</span> <span class="st">&quot;.zip&quot;</span>)</span>
-<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="fu">write_gtfs</span>(delayed, output)</span>
-<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="fu">unlink</span>(output)</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>output <span class="ot">&lt;-</span> <span class="fu">tempfile</span>(<span class="at">fileext =</span> <span class="st">&quot;.zip&quot;</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="fu">write_gtfs</span>(delayed, output)</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="fu">unlink</span>(output)</span></code></pre></div>
 </div>
 
 

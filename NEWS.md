@@ -1,4 +1,65 @@
+# GTFSwizard 1.2.2
+
+* `filter_area()` selects trips serving a polygon or bounding box. Crops check
+  endpoint times, shift frequency windows, and prune dependent records.
+* `compare_scenarios()` compares scheduled supply by route or network on one
+  service date, including vehicle-hours, vehicle-kilometres and active fleet.
+* Trip, route and segment speeds and distances use the same geometry. Detailed
+  distances identify each trip and originating stop sequence. Inferred shapes
+  and their stop measures use metres.
+* `repair_gtfs()` supports explicit overnight and stop-time repairs.
+  `repair_report()` identifies changed cells and original rows. Use
+  `repair = "none"` to disable reference cleanup during import.
+* `tidy_raptor()` prepares routing tables internally. Date and time filtering
+  limits frequency expansion before routing. Its public arguments are unchanged.
+
+* Barcelona regression tests exposed and fixed missing parent stations after
+  filtering, which prevented filtered feeds from being reimported or merged.
+* Frequency-based departures now contribute correctly to calendar counts,
+  service spans, vehicle-hours, planning indicators, and time filtering.
+  System frequency sums routes and directions before averaging over patterns;
+  weekday-hour averages include zero departures on active dates.
+* The explorer now uses OpenStreetMap tiles and keeps empty-corridor notices
+  in the plot rather than repeating warnings in the console.
+
+* Added the embedded `bcn_bus_gtfs` dataset from the supplied AMB Mobilitat
+  archive `es-barcelona-autos-castellbisbal-gtfs-892.zip`: six agencies,
+  128 routes, 25,122 retained trips, and 3,385 stops. The dataset uses xz
+  compression; import excludes 48 trips with fewer than two stop-time records.
+  All supplied calendar years (2017-2026) are retained.
+* Stop-level headways process one service pattern at a time, and stop
+  frequencies and dwell summaries aggregate services before expanding patterns,
+  reducing memory use
+  on feeds with many patterns. Services without active dates are omitted from
+  service-pattern analyses rather than producing missing-weight warnings.
+* `plot_calendar()` adds `max_patterns` to bound categorical legends without
+  removing dates. Less frequent patterns share an "Other service patterns" color.
+  Route-frequency, headway, trip-duration, and service-supply plots also accept
+  `max_patterns`, defaulting to the 12 most frequent patterns; `Inf` shows all.
+* Selecting the full date range in the explorer preserves every source trip;
+  date comparisons no longer depend on the internal Date storage type. The
+  scheduled-hours slider rounds its upper bound up to include the final hour.
+
+* `read_gtfs()` and `write_gtfs()` now open native file-selection windows when
+  their paths are omitted in interactive R sessions. Output filenames receive a
+  `.zip` extension when needed.
+
+* `read_gtfs()` converts UTF-16LE and UTF-16BE files to UTF-8 in a temporary
+  copy, preserving importer options and leaving the source archive unchanged.
+  A conversion warning is shown when `quiet = FALSE`.
+
+* Added `validate_gtfs()` using the MobilityData Canonical GTFS Schedule
+  Validator, with an optional SHA-256-verified download cached outside the
+  package. It prints a summary, returns findings, and optionally saves HTML and
+  JSON reports for a ZIP archive or exported feed object.
+
+* Time editing functions wrap extreme edited times into the next service-day
+  range while keeping stop times non-decreasing.
+
 # GTFSwizard 1.2.1
+
+* `split_trip()` accepts stop IDs as an alternative to an equal-part split;
+  boundary stops are included in both adjacent parts.
 
 * Refreshed the README figures and package website from the current plotting
   code, and added a reproducible figure-generation script for maintainers.

@@ -25,6 +25,15 @@ head(get_dwelltimes(gtfs, method = "by_route"))
 get_fleet(gtfs, method = "peak")
 
 ## -----------------------------------------------------------------------------
+faster <- edit_speed(gtfs, factor = 1.1)
+compare_scenarios(gtfs, faster, dates = "2021-12-13", by = "network")
+
+## ----eval=requireNamespace("tidytransit", quietly=TRUE) && requireNamespace("hms", quietly=TRUE) && requireNamespace("data.table", quietly=TRUE)----
+head(tidy_raptor(gtfs, dates = "2021-12-13", stop_ids = "66",
+                 min_departure = "06:20:00", max_arrival = "09:40:00",
+                 keep = "shortest"))
+
+## -----------------------------------------------------------------------------
 stops <- get_stops_sf(gtfs$stops)
 shapes <- get_shapes_sf(gtfs$shapes)
 nrow(stops)

@@ -40,6 +40,11 @@ useful for corridor, express-service, and time-window experiments. The retained
 trip can therefore begin or end at a different stop than it did in the source
 feed.
 
+Referenced parent stations are retained. Time filtering expands frequency-based
+trips into departures at their headway intervals, with generated trip IDs, before
+retaining the stop calls in the chosen window. Each departure can therefore
+retain a different portion of the original stop sequence.
+
 ```{r}
 stop_ids <- gtfs$stops$stop_id[1:5]
 partial_feed <- filter_stop(gtfs, stop_ids)
@@ -63,6 +68,19 @@ active_date <- gtfs$dates_services$date[
 ][1]
 date_feed <- filter_date(gtfs, active_date)
 ```
+
+## Select service within an area
+
+```{r}
+area <- c(-39, -4, -38, -3) # xmin, ymin, xmax, ymax in WGS84
+area_feed <- filter_area(gtfs, area)
+nrow(area_feed$trips)
+```
+
+The default keeps complete trips with a stop inside the area. With
+`full_trips = FALSE`, a trip needs two retained calls and known arrival and
+departure times at its new endpoints. Frequency windows shift with the first
+retained stop. An area with separated sections can retain nonconsecutive calls.
 
 ## Select or group without filtering
 
@@ -106,6 +124,12 @@ scaled_dwell <- edit_dwelltime(
 multiplier: values above one increase the stated quantity and values between
 zero and one decrease it.
 
+Edited times at or beyond 48 hours are wrapped into the next service-day
+clock range. To preserve non-decreasing stop times, the package may clamp
+subsequent times when wrapping would otherwise reverse their order. Extremely
+large adjustments can therefore change the intended durations; inspect the
+resulting timetable before using or exporting the scenario.
+
 ## Split trips
 
 `split_trip()` can create `split + 1` approximately equal consecutive parts,
@@ -124,6 +148,9 @@ if (length(trip_stops) > 2) {
 
 The first and final stops are not valid split boundaries. When several trips
 are edited together, stop IDs are interpreted within each selected trip.
+Each split boundary stop appears in both adjacent parts. Supply either `split`
+or `stops`, not both; each selected trip must have a matching internal stop
+when using `stops`.
 
 ## Merge and export scenarios
 

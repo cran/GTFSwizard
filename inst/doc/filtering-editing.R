@@ -26,6 +26,11 @@ active_date <- gtfs$dates_services$date[
 date_feed <- filter_date(gtfs, active_date)
 
 ## -----------------------------------------------------------------------------
+area <- c(-39, -4, -38, -3) # xmin, ymin, xmax, ymax in WGS84
+area_feed <- filter_area(gtfs, area)
+nrow(area_feed$trips)
+
+## -----------------------------------------------------------------------------
 grouped <- selection(gtfs, route_id, direction_id)
 attr(grouped, "selection")$groups
 

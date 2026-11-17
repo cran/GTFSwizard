@@ -350,7 +350,9 @@ requested.</p>
 <h2>Start the dashboard</h2>
 <p>Pass an existing object when working from R.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(GTFSwizard)</span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">explore_gtfs</span>(for_rail_gtfs)</span></code></pre></div>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">explore_gtfs</span>(for_rail_gtfs)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="co"># A multi-agency historical AMB Mobilitat bus feed from Barcelona:</span></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">explore_gtfs</span>(bcn_bus_gtfs)</span></code></pre></div>
 <p>In an interactive session, omitting the feed opens a file browser.
 This is the simplest route for users who do not need to write R
 code.</p>
@@ -372,6 +374,11 @@ performance plots. Large route and service-pattern sets are summarized
 or limited in plots where showing every class would make labels and
 legends unreadable. Plot-specific <code>top_n</code> controls can expand
 those views when required.</p>
+<p>The full AMB example retains every calendar year from 2017 through
+2026. In the calendar’s service-pattern fill mode, the pattern-count
+control limits individually colored patterns; remaining patterns share
+an “Other service patterns” color. All dates and their original pattern
+IDs remain in the feed.</p>
 </div>
 <div id="interpret-the-planning-indicators" class="section level2">
 <h2>Interpret the planning indicators</h2>

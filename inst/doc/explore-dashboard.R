@@ -4,6 +4,8 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ## ----eval=FALSE---------------------------------------------------------------
 # library(GTFSwizard)
 # explore_gtfs(for_rail_gtfs)
+# # A multi-agency historical AMB Mobilitat bus feed from Barcelona:
+# explore_gtfs(bcn_bus_gtfs)
 
 ## ----eval=FALSE---------------------------------------------------------------
 # explore_gtfs()

@@ -3,7 +3,16 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ## -----------------------------------------------------------------------------
 library(GTFSwizard)
+data(bcn_bus_gtfs, package = "GTFSwizard")
+head(bcn_bus_gtfs$routes)
 
+## -----------------------------------------------------------------------------
+barcelona_snapshot <- filter_date(
+  bcn_bus_gtfs, seq(as.Date("2024-06-21"), as.Date("2024-06-26"), by = "day")
+)
+nrow(barcelona_snapshot$trips)
+
+## -----------------------------------------------------------------------------
 gtfs <- for_rail_gtfs
 summary(gtfs)
 
